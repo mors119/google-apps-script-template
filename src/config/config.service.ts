@@ -5,10 +5,10 @@ export interface ConfigurationProvider {
 }
 
 export class ConfigService {
-  public constructor(private readonly provider: ConfigurationProvider) {}
+  public constructor(private readonly providers: ReadonlyArray<ConfigurationProvider>) {}
 
   public getRequired(key: ConfigKey): string {
-    const value = this.provider.get(key);
+    const value = this.getOptional(key);
 
     if (!value) {
       throw new Error(`Missing required configuration value for key: ${key}`);
@@ -18,22 +18,18 @@ export class ConfigService {
   }
 
   public getOptional(key: ConfigKey): string | null {
-    return this.provider.get(key);
+    for (const provider of this.providers) {
+      const value = provider.get(key);
+
+      if (value) {
+        return value;
+      }
+    }
+
+    return null;
   }
 
-  public getNumber(key: ConfigKey, fallbackValue: number): number {
-    const rawValue = this.provider.get(key);
-
-    if (!rawValue) {
-      return fallbackValue;
-    }
-
-    const parsedValue = Number(rawValue);
-
-    if (Number.isNaN(parsedValue)) {
-      throw new Error(`Configuration key ${key} must be numeric`);
-    }
-
-    return parsedValue;
+  public getOptionalWithDefault(key: ConfigKey, fallbackValue: string): string {
+    return this.getOptional(key) ?? fallbackValue;
   }
 }

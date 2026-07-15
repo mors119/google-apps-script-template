@@ -1,6 +1,9 @@
-import { CONFIG_KEYS } from './config/config-keys';
 import { createAppContainer } from './config/service-container';
-import { handleOnOpen } from './triggers/on-open.trigger';
+import { handleOnEdit } from './entrypoints/triggers/on-edit';
+import { handleOnOpen } from './entrypoints/triggers/on-open';
+import { handleTimeTrigger } from './entrypoints/triggers/time-trigger';
+import { handleDoGet } from './entrypoints/webapp/do-get';
+import { handleDoPost } from './entrypoints/webapp/do-post';
 
 const container = createAppContainer();
 
@@ -8,26 +11,40 @@ const onOpen = (): void => {
   handleOnOpen(container);
 };
 
-const runTemplateDemo = (): void => {
-  const result = container.templateDemoService.run();
-  SpreadsheetApp.getUi().alert(result);
+const onEdit = (event: GoogleAppsScript.Events.SheetsOnEdit): void => {
+  handleOnEdit(container, event);
 };
 
-const showConfigurationHelp = (): void => {
-  const message = [
-    `Set ${CONFIG_KEYS.productApi} in Script Properties.`,
-    `Optionally set ${CONFIG_KEYS.menuTitle}.`,
-  ].join('\n');
-
-  SpreadsheetApp.getUi().alert(
-    'Configuration Required',
-    message,
-    SpreadsheetApp.getUi().ButtonSet.OK,
+const runDailyReport = (): void => {
+  const report = container.dailyReportService.run();
+  container.uiPort.alert(
+    'Daily Report Completed',
+    `Generated ${report.rows.length} rows from ${report.sourceSheet}.`,
   );
+};
+
+const runTimeTrigger = (): void => {
+  handleTimeTrigger(container);
+};
+
+const showStarterHelp = (): void => {
+  container.workspaceMenuService.showHelp();
+};
+
+const doGet = (): GoogleAppsScript.Content.TextOutput => {
+  return handleDoGet(container);
+};
+
+const doPost = (event: GoogleAppsScript.Events.DoPost): GoogleAppsScript.Content.TextOutput => {
+  return handleDoPost(container, event);
 };
 
 Object.assign(globalThis, {
   onOpen,
-  runTemplateDemo,
-  showConfigurationHelp,
+  onEdit,
+  runDailyReport,
+  runTimeTrigger,
+  showStarterHelp,
+  doGet,
+  doPost,
 });

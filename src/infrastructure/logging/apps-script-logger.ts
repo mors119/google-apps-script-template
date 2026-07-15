@@ -1,13 +1,7 @@
-import { serializeContext } from '../utils/logging';
+import type { LoggerPort } from '../../application/ports/logger.port';
+import { safeStringify } from '../../utils/json';
 
-export interface LoggerService {
-  debug(message: string, context?: Readonly<Record<string, unknown>>): void;
-  info(message: string, context?: Readonly<Record<string, unknown>>): void;
-  warn(message: string, context?: Readonly<Record<string, unknown>>): void;
-  error(message: string, context?: Readonly<Record<string, unknown>>): void;
-}
-
-export class AppsScriptLogger implements LoggerService {
+export class AppsScriptLogger implements LoggerPort {
   public debug(message: string, context?: Readonly<Record<string, unknown>>): void {
     Logger.log(this.format('DEBUG', message, context));
   }
@@ -29,7 +23,7 @@ export class AppsScriptLogger implements LoggerService {
     message: string,
     context?: Readonly<Record<string, unknown>>,
   ): string {
-    const contextSuffix = context ? ` | ${serializeContext(context)}` : '';
+    const contextSuffix = context ? ` | ${safeStringify(context)}` : '';
     return `[${level}] ${message}${contextSuffix}`;
   }
 }

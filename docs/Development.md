@@ -1,32 +1,35 @@
 # Development
 
-## Local Workflow
+## Local Setup
 
 1. Install dependencies with `npm install`.
-2. Create `.clasp.json` from `.clasp.json.example`.
-3. Authenticate locally with `npx clasp login`.
-4. Configure Script Properties in the target Apps Script project.
-5. Develop in `src/` and validate with local scripts.
+2. Copy `.clasp.json.example` to `.clasp.json`.
+3. Authenticate with `npx clasp login`.
+4. Configure required Script Properties in the target Apps Script project.
 
-## Scripts
+## Commands
 
-- `npm run lint`: lint all project files
-- `npm run lint:fix`: apply safe ESLint fixes
-- `npm run format`: check Prettier formatting
-- `npm run format:write`: write Prettier formatting
-- `npm run typecheck`: run the TypeScript compiler without emitting files
-- `npm run test`: run the Vitest suite with coverage
-- `npm run build`: compile the Apps Script bundle into `dist/`
-- `npm run push`: build and push to Apps Script
-- `npm run pull`: pull the remote Apps Script project metadata and files
+- `npm run format`
+- `npm run format:write`
+- `npm run lint`
+- `npm run lint:fix`
+- `npm run typecheck`
+- `npm run test`
+- `npm run build`
+- `npm run push`
+- `npm run deploy:local`
+- `npm run pull`
 
-## Testing Approach
+## Testing Strategy
 
-The template emphasizes unit tests on service and configuration layers. Infrastructure that depends on runtime globals should be wrapped behind interfaces and mocked in tests.
+Vitest tests focus on the application layer. Adapters that require Apps Script globals should be tested through mocks, fakes, or higher-level integration checks rather than direct unit tests in Node.
 
-## Coding Standards
+## Extension Pattern
 
-- Use strict TypeScript and avoid `any`.
-- Prefer dependency injection for service composition.
-- Keep platform API usage inside infrastructure wrappers.
-- Read external endpoints from configuration rather than literals.
+When adding a new use case:
+
+1. Add or reuse an application port.
+2. Implement an infrastructure adapter for that port.
+3. Add a service that depends on ports, not runtime APIs.
+4. Add or update an entrypoint.
+5. Add Vitest tests with fake ports.

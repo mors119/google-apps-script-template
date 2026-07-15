@@ -3,8 +3,13 @@ import globals from 'globals';
 import tseslint from 'typescript-eslint';
 
 const googleAppsScriptGlobals = {
+  CalendarApp: 'readonly',
+  ContentService: 'readonly',
+  DriveApp: 'readonly',
+  GmailApp: 'readonly',
   HtmlService: 'readonly',
   Logger: 'readonly',
+  MimeType: 'readonly',
   PropertiesService: 'readonly',
   SpreadsheetApp: 'readonly',
   UrlFetchApp: 'readonly',

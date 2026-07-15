@@ -1,133 +1,103 @@
-# Google Apps Script TypeScript Template
+# Google Apps Script TypeScript Starter
 
-Production-ready template repository for Google Apps Script projects built entirely from VSCode using TypeScript, esbuild, Vitest, clasp, and GitHub Actions.
+Reusable Google Workspace automation starter for teams building Google Apps Script projects in TypeScript with clean architecture, esbuild, Vitest, clasp, and GitHub Actions.
 
-## Overview
+## Vision
 
-This template is designed for teams that want modern engineering discipline around Google Apps Script development. It enforces layered architecture, strict typing, reusable services, centralized configuration, automated quality gates, and CI/CD-based deployment.
+This repository is a framework-style starter for Google Workspace automation rather than a single-product demo. It separates entrypoints, application services, domain models, infrastructure adapters, and Google-specific runtime integrations so teams can build Sheets automations, Gmail workflows, Calendar jobs, Drive jobs, Web Apps, and trigger-driven scripts without putting `SpreadsheetApp`, `GmailApp`, `CalendarApp`, or `DriveApp` inside business logic.
 
-Developers write TypeScript locally, validate changes with linting and tests, build Apps Script-compatible output into `dist/`, and deploy through GitHub Actions using `clasp`.
-
-## Features
-
-- Strict TypeScript with `noImplicitAny` and additional compiler safeguards
-- Layered architecture: presentation, service, infrastructure, and Google Apps Script API boundaries
-- Centralized configuration through `ConfigService`
-- `esbuild` bundling for Apps Script-compatible deployment artifacts
-- ESLint flat config with TypeScript-aware rules
-- Prettier formatting for consistent code style
-- Vitest unit testing with coverage
-- GitHub Actions workflows for CI and deployment
-- `clasp`-based deployment without web-editor development
-- Reusable service and infrastructure abstractions suited for team-scale projects
-
-## Installation
-
-### 1. Install dependencies
-
-```bash
-npm install
-```
-
-### 2. Create local clasp configuration
-
-Copy `.clasp.json.example` to `.clasp.json` and replace the script ID.
-
-```json
-{
-  "scriptId": "YOUR_SCRIPT_ID",
-  "rootDir": "dist"
-}
-```
-
-### 3. Configure Script Properties
-
-Set these properties in your Apps Script project:
-
-- `PRODUCT_API`
-- `MENU_TITLE` (optional)
-
-### 4. Authenticate clasp locally
-
-```bash
-npx clasp login
-```
-
-## Development
-
-Useful commands:
-
-- `npm run lint`
-- `npm run typecheck`
-- `npm run test`
-- `npm run build`
-- `npm run push`
-- `npm run pull`
-- `npm run deploy`
-
-The build output is generated in `dist/` and is ready for `clasp push`.
-
-## Deployment
-
-Deployment is handled by GitHub Actions. The deploy workflow runs only after the CI workflow succeeds on `main`.
-
-Required GitHub Secrets:
-
-- `CLASP_CREDENTIALS`: full contents of `.clasprc.json`
-- `CLASP_SCRIPT_ID`: target Apps Script project ID
-
-The deploy job rebuilds the project, generates `.clasp.json`, and pushes `dist/` to Google Apps Script using `clasp`.
-
-## Repository Structure
+## Architecture
 
 ```text
-.
-├── .github/workflows/
-├── .vscode/
-├── dist/
-├── docs/
-├── scripts/
-├── src/
-│   ├── config/
-│   ├── infrastructure/
-│   ├── menu/
-│   ├── services/
-│   ├── triggers/
-│   ├── utils/
-│   └── index.ts
-├── tests/
-├── .clasp.json.example
-├── appsscript.json
-├── esbuild.config.js
-├── eslint.config.js
-├── package.json
-├── tsconfig.json
-└── README.md
+Entrypoints
+  -> Application Services
+    -> Domain Models
+      -> Ports
+        -> Infrastructure Adapters
+          -> Google Apps Script APIs
 ```
 
-## Minimal Working Example
+Repository layout:
 
-The template includes:
+```text
+src/
+├── application/
+│   ├── ports/
+│   └── services/
+├── config/
+├── domain/
+│   ├── entities/
+│   └── models/
+├── entrypoints/
+│   ├── sheets/
+│   ├── triggers/
+│   └── webapp/
+├── infrastructure/
+│   ├── adapters/
+│   ├── http/
+│   └── logging/
+├── utils/
+└── index.ts
+```
 
-- A custom spreadsheet menu installed by `onOpen`
-- A `runTemplateDemo` Apps Script function
-- An `HttpRequestService` for external requests
-- A `ConfigService` for centralized configuration
-- An `AppsScriptLogger` for structured logging
+## Supported Adapters
 
-The demo function reads `PRODUCT_API` from Script Properties, issues a request through the service layer, logs the result, and displays a UI alert.
+- Sheets adapter: create sheets, read ranges, write ranges, append rows
+- Gmail adapter: send text and HTML email
+- Calendar adapter: create, update, delete events
+- Drive adapter: create files, update files, manage folders
+- HTTP adapter: external API requests with centralized error handling
+- UI adapter: spreadsheet menu and alert wiring kept out of application services
 
-## Contributing
+## Example Application
 
-1. Create a feature branch.
-2. Run `npm run lint`, `npm run typecheck`, `npm run test`, and `npm run build`.
-3. Open a pull request with a clear description of the change.
+The starter includes `DailyReportService`, which demonstrates a reusable automation flow:
 
-Additional contributor guidance is documented in [docs/Contributing.md](./docs/Contributing.md).
+1. Time trigger or menu action enters through an entrypoint.
+2. `DailyReportService` reads report rows through `SheetPort`.
+3. The service formats a report and sends it through `MailPort`.
+4. Runtime-specific work stays inside `SheetsAdapter` and `GmailAdapter`.
 
-## Troubleshooting
+Web App support is also included through `doGet` and `doPost`. The sample `WebAppService` stores incoming payloads in Drive through `DrivePort`.
 
-- If `clasp push` fails locally, verify `.clasp.json`, your local `clasp login`, and the target script permissions.
-- If CI fails on `npm ci`, ensure `package-lock.json` is committed and dependency versions are valid.
-- If deployment fails, verify `CLASP_CREDENTIALS` and `CLASP_SCRIPT_ID` secrets.
-- If runtime requests fail, confirm that `PRODUCT_API` is set and required scopes exist in `appsscript.json`.
+## Development Workflow
+
+1. Install dependencies with `npm install`.
+2. Copy `.clasp.json.example` to `.clasp.json` locally and set your Apps Script `scriptId`.
+3. Authenticate with `npx clasp login`.
+4. Set Script Properties used by the starter:
+   `REPORT_RECIPIENT`, `REPORT_SHEET_NAME`, `REPORT_RANGE`, `REPORT_MENU_TITLE`, `REPORT_DRIVE_FOLDER`, `EXTERNAL_API_URL`, `EXTERNAL_API_TOKEN`, `DEFAULT_CALENDAR_ID`
+5. Run validation locally:
+   `npm run format`
+   `npm run lint`
+   `npm run typecheck`
+   `npm run test`
+   `npm run build`
+
+## Deployment Workflow
+
+The deployment path remains:
+
+`TypeScript -> esbuild -> dist -> clasp push -> Google Apps Script`
+
+Local commands:
+
+- `npm run build`
+- `npm run push`
+- `npm run deploy:local`
+- `npm run pull`
+
+CI validates formatting, linting, type checking, tests, and the build. Deployment runs from GitHub Actions after CI succeeds on `main`.
+
+## Extension Guide
+
+To add a new automation use case:
+
+1. Define a port in `src/application/ports` if the use case needs a new external dependency.
+2. Implement the port in `src/infrastructure`.
+3. Add an application service in `src/application/services`.
+4. Wire the service in `src/config/service-container.ts`.
+5. Expose it through an entrypoint in `src/entrypoints`.
+6. Add Vitest unit tests using fakes or mocks instead of Apps Script globals.
+
+Further details are in [docs/Architecture.md](./docs/Architecture.md), [docs/Adapters.md](./docs/Adapters.md), [docs/Development.md](./docs/Development.md), and [docs/Deployment.md](./docs/Deployment.md).

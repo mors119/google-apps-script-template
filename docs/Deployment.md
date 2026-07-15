@@ -1,39 +1,41 @@
 # Deployment
 
-## CI Workflow
+## Workflow
 
-The CI workflow runs on pushes to `main` and `develop`, and on pull requests. It executes:
+The repository keeps the standard Apps Script deployment flow:
 
-1. `npm ci`
-2. `npm run lint`
-3. `npm run typecheck`
-4. `npm run test`
-5. `npm run build`
+`TypeScript -> esbuild -> dist -> clasp push -> Google Apps Script`
 
-## Deploy Workflow
+`esbuild` writes `dist/Code.js` and copies `appsscript.json` into `dist/`.
 
-The deploy workflow listens to successful completion of the CI workflow on `main`.
+## Local Deployment
 
-Steps:
+- `npm run build`
+- `npm run push`
+- `npm run deploy:local`
 
-1. Check out the commit that passed CI.
-2. Install dependencies.
-3. Build the project.
-4. Write `~/.clasprc.json` from `CLASP_CREDENTIALS`.
-5. Generate `.clasp.json` from `CLASP_SCRIPT_ID`.
-6. Push `dist/` to Apps Script using `clasp`.
+`deploy:local` is a convenience alias for local development. GitHub Actions remains the canonical shared deployment path for the template.
 
-## Required GitHub Secrets
+## GitHub Actions
+
+CI validates:
+
+1. dependency installation
+2. formatting
+3. linting
+4. type checking
+5. unit tests
+6. build output
+
+Deployment:
+
+1. runs after CI succeeds on `main`
+2. rebuilds the project
+3. writes `~/.clasprc.json` from `CLASP_CREDENTIALS`
+4. generates `.clasp.json` from `CLASP_SCRIPT_ID`
+5. runs `clasp push --force`
+
+## Required Secrets
 
 - `CLASP_CREDENTIALS`
 - `CLASP_SCRIPT_ID`
-
-## Authentication Format
-
-`CLASP_CREDENTIALS` should contain the full JSON content of a valid `.clasprc.json` file created by `clasp login`.
-
-## Operational Guidance
-
-- Protect the `main` branch.
-- Require CI to pass before merge.
-- Restrict deployment secrets to trusted environments if your org requires approvals.
