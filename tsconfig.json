@@ -17,5 +17,11 @@
     "types": ["google-apps-script"],
     "rootDir": "."
   },
-  "include": ["src/**/*.ts", "tests/**/*.ts", "esbuild.config.js", "eslint.config.js"]
+  "include": [
+    "src/**/*.ts",
+    "tests/**/*.ts",
+    "esbuild.config.js",
+    "eslint.config.js",
+    "scripts/**/*.mjs"
+  ]
 }

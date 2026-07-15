@@ -12,30 +12,27 @@ class InMemoryConfigurationProvider implements ConfigurationProvider {
 }
 
 describe('ConfigService', () => {
-  it('returns a required configuration value', () => {
-    const service = new ConfigService(
+  it('returns the first configured value across providers', () => {
+    const service = new ConfigService([
+      new InMemoryConfigurationProvider({}),
       new InMemoryConfigurationProvider({
-        [CONFIG_KEYS.productApi]: 'configured-endpoint',
+        [CONFIG_KEYS.reportRecipient]: 'team@example.com',
       }),
-    );
+    ]);
 
-    expect(service.getRequired(CONFIG_KEYS.productApi)).toBe('configured-endpoint');
+    expect(service.getRequired(CONFIG_KEYS.reportRecipient)).toBe('team@example.com');
   });
 
-  it('returns a numeric configuration value', () => {
-    const service = new ConfigService(
-      new InMemoryConfigurationProvider({
-        [CONFIG_KEYS.menuTitle]: '15000',
-      }),
-    );
+  it('returns a default value when configuration is absent', () => {
+    const service = new ConfigService([new InMemoryConfigurationProvider({})]);
 
-    expect(service.getNumber(CONFIG_KEYS.menuTitle, 3000)).toBe(15000);
+    expect(service.getOptionalWithDefault(CONFIG_KEYS.reportSheetName, 'Report')).toBe('Report');
   });
 
   it('throws when a required value is missing', () => {
-    const service = new ConfigService(new InMemoryConfigurationProvider({}));
+    const service = new ConfigService([new InMemoryConfigurationProvider({})]);
 
-    expect(() => service.getRequired(CONFIG_KEYS.productApi)).toThrow(
+    expect(() => service.getRequired(CONFIG_KEYS.reportRecipient)).toThrow(
       /Missing required configuration value/,
     );
   });

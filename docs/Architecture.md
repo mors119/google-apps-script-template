@@ -2,71 +2,57 @@
 
 ## Goal
 
-This template applies backend-style engineering practices to Google Apps Script projects so teams can scale implementation without relying on the Apps Script editor.
+This starter provides a clean architecture baseline for Google Apps Script projects that need to work across multiple Google Workspace surfaces without hard-coding those APIs into business logic.
 
-## Layered Design
+## Layers
 
-The repository separates responsibilities into four layers:
+### Entrypoints
 
-1. Presentation
-2. Service
-3. Infrastructure
-4. Platform and external integrations
+Located in `src/entrypoints/`.
 
-### Presentation
+- `webapp/`: `doGet` and `doPost`
+- `triggers/`: time-based and installable/simple triggers
+- `sheets/`: spreadsheet menu wiring
 
-Located in `src/index.ts`, `src/menu`, and `src/triggers`.
+Entrypoints translate runtime events into application service calls.
 
-Responsibilities:
+### Application
 
-- expose global Apps Script entry points
-- handle UI interactions
-- delegate business logic to services
+Located in `src/application/`.
 
-### Service
+- `services/`: use-case orchestration
+- `ports/`: contracts for external dependencies
 
-Located in `src/services`.
+Application services never call `SpreadsheetApp`, `GmailApp`, `DriveApp`, `CalendarApp`, or `UrlFetchApp` directly.
 
-Responsibilities:
+### Domain
 
-- orchestrate use cases
-- enforce business rules
-- depend on abstractions instead of Google APIs directly
+Located in `src/domain/`.
+
+Domain entities and models hold application data structures that are independent of the Google runtime.
 
 ### Infrastructure
 
-Located in `src/infrastructure`.
+Located in `src/infrastructure/`.
 
-Responsibilities:
+Infrastructure implements application ports using Google Apps Script APIs and related helpers.
 
-- wrap Google Apps Script APIs
-- implement HTTP, logging, and configuration access
-- isolate platform-specific behavior
+## Dependency Direction
 
-### Configuration
+```text
+Entrypoints -> Application -> Domain
+                         -> Ports -> Infrastructure -> Google APIs
+```
 
-Located in `src/config`.
+Dependencies point inward. Ports live with the application, adapters live with infrastructure.
 
-Responsibilities:
+## Composition
 
-- define configuration keys
-- centralize property lookup
-- assemble the application container
+`src/config/service-container.ts` is the composition root. It assembles:
 
-## Dependency Flow
+- configuration providers
+- adapters
+- logging
+- application services
 
-Dependencies flow inward:
-
-- presentation depends on services
-- services depend on infrastructure interfaces
-- infrastructure depends on Google Apps Script APIs
-
-This design keeps core logic testable and reduces coupling to runtime globals.
-
-## Build Strategy
-
-`esbuild` bundles `src/index.ts` into `dist/Code.js` and copies `appsscript.json` into `dist/`. `clasp` then pushes the `dist/` directory to Apps Script.
-
-## Configuration Strategy
-
-No source file should hardcode service endpoints. External endpoints must be read through `ConfigService`, typically from Script Properties. This keeps the template environment-agnostic and deployment-safe.
+This keeps object wiring in one place and keeps entrypoints thin.
